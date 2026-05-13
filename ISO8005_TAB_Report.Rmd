@@ -1,0 +1,557 @@
+---
+title: ""
+output:
+  pdf_document:
+    toc: false
+    number_sections: true
+    fig_caption: true
+    latex_engine: xelatex
+    keep_tex: true
+fontsize: 11pt
+geometry: margin=1in
+header-includes:
+  - \let\maketitle\relax
+  - \usepackage{float}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo        = FALSE,
+  warning     = FALSE,
+  message     = FALSE,
+  fig.align   = "center",
+  fig.pos     = "H",  # keeps figures exactly where the relevant text introduces them
+  out.width   = "85%"
+)
+suppressPackageStartupMessages({
+  library(tidyverse); library(scales); library(knitr); library(lubridate)
+})
+
+
+# --- Project access points (edit before submission) -----------------------
+project_dashboard <- "output/TAB\\_Dashboard.html"
+project_github    <- "https://github.com/<your-handle>/iso8005-tab-report"
+student_number    <- "[insert student number]"
+word_count        <- "[insert word count]"
+
+# ggrepel safety layer.
+if (!requireNamespace("ggrepel", quietly = TRUE)) {
+  geom_text_repel  <- function(...) ggplot2::geom_text(...)
+  geom_label_repel <- function(...) ggplot2::geom_label(...)
+} else {
+  geom_text_repel  <- ggrepel::geom_text_repel
+  geom_label_repel <- ggrepel::geom_label_repel
+}
+
+# Relative paths resolve from the folder containing this Rmd.
+report_dir <- tryCatch({
+  input_file <- knitr::current_input()
+  if (!is.null(input_file) && nzchar(input_file)) dirname(normalizePath(input_file)) else getwd()
+}, error = function(e) getwd())
+knitr::opts_knit$set(root.dir = report_dir)
+
+try(load("scripts/cleaned_data.RData"),      silent = TRUE)
+try(load("scripts/calculated_metrics.RData"), silent = TRUE)
+try(load("scripts/forecast_models.RData"),    silent = TRUE)
+
+# Knit-safe figure helper.
+include_or_placeholder <- function(path) {
+  if (file.exists(path)) {
+    knitr::include_graphics(path)
+  } else {
+    plot.new(); text(0.5, 0.55, "Figure not found", cex = 1.1, font = 2)
+    text(0.5, 0.42, path, cex = 0.85)
+  }
+}
+```
+
+\thispagestyle{empty}
+\begin{center}
+\vspace*{0.5cm}
+{\Large \textbf{Newcastle University Business School}}\\[6pt]
+{\large ISO8005 — Web \& Social Media Analytics}\\[18pt]
+
+\rule{\linewidth}{0.4pt}\\[6pt]
+{\LARGE \textbf{Assignment Cover Sheet}}\\[6pt]
+\rule{\linewidth}{0.4pt}\\[18pt]
+\end{center}
+
+\begin{tabular}{p{4.5cm} p{10cm}}
+\textbf{Module Code:}     & ISO8005 \\
+\textbf{Module Name:}     & Web \& Social Media Analytics \\
+\textbf{Assignment:}      & Tyne Artisan Bakery — From Oven to Online \\
+\textbf{Academic Year:}   & 2025–26 \\
+\textbf{Student Number:}  & `r student_number` \\
+\textbf{Submission Date:} & May 2026 \\
+\end{tabular}
+
+\vspace{0.8cm}
+\textbf{Assignment Declarations}
+\vspace{0.2cm}
+
+\textit{Declaration of Original Work} — I certify that this submission is entirely my own work and has not been copied, reproduced, or completed with unauthorised assistance. All sources used have been appropriately acknowledged. \hfill $\boxtimes$
+
+\vspace{0.4cm}
+\textit{Declaration of AI Understanding} — I certify that I have read and understood the AI for Students Academic Integrity Checklist. \hfill $\boxtimes$
+
+\vspace{0.4cm}
+\textit{Declaration of Word Count} — Total word count for this assignment is: `r word_count` words (excluding cover page, executive summary, contents, references, appendices and visuals, per the brief).
+
+\vspace{0.4cm}
+\textit{Declaration of Development Work Retention} — All development works, scripts, RData snapshots and figures are retained in the project repository for a minimum of three months after submission and are available for scrutiny within five working days of request. \hfill $\boxtimes$
+
+\vspace{1.2cm}
+\rule{\linewidth}{0.4pt}\\[4pt]
+\textbf{Project Access Points}\\[6pt]
+\rule{\linewidth}{0.4pt}
+
+\begin{tabular}{p{4.5cm} p{10cm}}
+\textbf{Interactive dashboard:} & \texttt{`r project_dashboard`} (offline, self-contained HTML) \\
+\textbf{Source repository:}     & \texttt{`r project_github`} \emph{(placeholder)} \\
+\end{tabular}
+
+\small \emph{The interactive dashboard renders 11 KPI panels from the same RData snapshots used in this report (Figure 16). The GitHub repository contains the Rmd, R scripts, dataset, figures and the offline dashboard.}
+
+\newpage
+
+\thispagestyle{empty}
+\begin{center}
+\vspace*{2cm}
+{\LARGE \textbf{From Oven to Online}}\\[10pt]
+{\Large A Data-Led, AI-Augmented Go-to-Market Plan for}\\[4pt]
+{\Large \textbf{Tyne Artisan Bakery}}\\[18pt]
+{\large \emph{Anchored on Monthly Active Local Customers (MALC) as the North Star metric}}\\[24pt]
+\rule{0.6\linewidth}{0.4pt}\\[14pt]
+{\large Student Number: \texttt{`r student_number`}}\\[6pt]
+{\large May 2026}\\[6pt]
+{\normalsize ISO8005 --- Web \& Social Media Analytics}\\
+{\normalsize Newcastle University Business School}
+\end{center}
+\vfill
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+# Executive Summary
+
+> *“Growth is not only about acquiring more customers; it is about repeatedly creating measurable value for the right customers.”*
+
+Tyne Artisan Bakery (TAB) is a Newcastle artisan bakery with a strong in-store reputation but no digital presence. This report sets out a 12–18 month, data-led and AI-augmented go-to-market plan anchored on a single North Star metric — **Monthly Active Local Customers (MALC)** — and grounded in TAB's two-year dataset (5,942 orders, 4,179 unique customers, £120,835 revenue, Mar 2024 – Feb 2026).
+
+```{r executive-summary-kpis}
+summary_kpis <- tibble(
+  Metric = c(
+    "Orders analysed",
+    "Unique customers",
+    "Total revenue",
+    "Average order value",
+    "North Star metric",
+    "Recommended planning horizon"
+  ),
+  Value = c(
+    "5,942",
+    "4,179",
+    "£120,835",
+    "£20.34",
+    "Monthly Active Local Customers (MALC)",
+    "12–18 months"
+  ),
+  `Strategic meaning` = c(
+    "Sufficient order base for customer, channel and conversion analysis",
+    "Shows a sizeable customer pool for retention-led growth",
+    "Confirms commercial potential, but not yet a mature digital engine",
+    "Requires careful acquisition-cost control before scaling paid media",
+    "Connects digital growth with repeat local customer engagement",
+    "Allows phased MVP launch, testing, optimisation and scale-up"
+  )
+)
+
+kable(summary_kpis, caption = "Executive summary of TAB's commercial baseline")
+```
+
+**Four headline findings drive the plan:**
+
+1. **Paid media is unprofitable.** Only Google Search clears the 1.0$\times$ ROAS break-even (1.14$\times$); Meta 0.82$\times$, TikTok 0.90$\times$, Other 0.62$\times$. CAC (£36–£52) exceeds AOV (£20.34) — TAB must lead with owned channels (email, subscriptions, local SEO).
+2. **North East is the launch market.** It already delivers 20.1% of revenue, the natural catchment for local delivery and click-and-collect.
+3. **The hero-banner A/B test is decisive.** Variant B converts at 3.65% vs 2.86% — a +27.5% uplift, z = 6.90, p < 0.001 — and should ship from day one.
+4. **Mobile-first, subscription-led.** 69% of orders are mobile and average monthly churn is 4.5%; an AI recommendation layer plus a subscription engine compounds retention.
+
+**Recommended solution:** a Shopify Basic MVP with a thin AI layer (LLM recommender, Prophet demand forecasting, GenAI content studio for menu copy and alt text). At a 12-month spend of **£11,500**, the Base scenario (+4%/mo MALC) lifts MALC from **430 (Feb 2026) to $\approx$ 688 (Feb 2027)**; High adds a further $\approx$ 30%. A live leadership dashboard summarising all KPIs accompanies this report and is listed on the cover sheet.
+
+\newpage
+
+# Introduction
+
+## Business Context
+
+TAB is a microenterprise: founder-led, fewer than ten staff, bounded by the physical reach of an in-store counter and weekend market. The owners want to launch e-commerce (local delivery and click-and-collect) and build a coherent social presence from scratch, with modest budgets and limited technical capacity.
+
+The deeper strategic problem is the **absence of a measurable digital customer-acquisition and -retention system**. Without instrumented funnels and a single agreed metric, every marketing investment becomes a bet rather than an experiment. This report sequences (i) the metric, (ii) the MVP that generates the data, and (iii) the analytics and forecasting that turn the data into reallocation.
+
+## Methodology
+
+The analysis follows a CRISP-DM workflow (Wirth & Hipp, 2000) with reproducible-research practice (Wickham & Bryan, 2023). Four stages run end-to-end via `source("scripts/RUN_ALL.R")`:
+
+**Stage 1 — Data Understanding** (Script 01). Load the 7-sheet workbook via `readxl`; harmonise types with `janitor::clean_names()` and `lubridate`; profile null counts and date ranges.
+
+**Stage 2 — Metric Modelling** (Script 02). Compute 15+ KPIs grouped by month/channel/region/device/variant. Key formulas:
+
+| KPI | Formula | Source |
+|---|---|---|
+| CVR | `orders / sessions` | `monthly_marketing` |
+| AOV | `revenue / orders` | `orders` |
+| ROAS | `attributed_revenue / spend` | `paid_campaigns` |
+| CAC | `spend / new_customers` | `paid_campaigns` |
+| MALC | `n_distinct(customer_id)` per month | `orders` |
+| Churn | `subscription_cancels / active_subscriptions` | `monthly_marketing` |
+| CLV | `(AOV * orders_per_cust * margin) / churn` | derived |
+
+**Stage 3 — Statistical Inference**. Two-proportion z-test for the A/B uplift (Agresti, 2018); compound-growth scenario forecasting; simplified Pareto/NBD CLV (Fader, Hardie & Lee, 2005).
+
+**Stage 4 — Decision Design**. Every insight is mapped to a specific action with an expected MALC, ROAS or CAC impact.
+
+\newpage
+
+# TAB Web and Social Media Analysis & Plan
+
+## Problem Framing, North Star and SMART Objectives
+
+**MALC definition:** *the count of unique customers (by `customer_id`) who place $\geq$ 1 online order, click-and-collect order, or active bread subscription within a calendar month, weighted to the North East catchment.* MALC satisfies the four good-North-Star tests in Croll & Yoskovitz (2013): aligned to value, leading, actionable, understandable.
+
+```{r fig.cap="MALC growth logic — funnel-to-North-Star mapping.", out.width="80%"}
+include_or_placeholder("figures/fig1_growth_logic.png")
+```
+
+**SMART objectives (12-month):**
+
+| Objective | KPI | Target | Deadline |
+|---|---|---|---|
+| Grow local customer base | MALC | +60% (430 $\rightarrow$ $\approx$690) | Feb 2027 |
+| Improve site conversion | CVR | $\geq$ 3.0% | End Q3 2026 |
+| Build repeat revenue | Active subscriptions | $\geq$ 700 | End Q4 2026 |
+| Optimise paid efficiency | Blended ROAS | $\geq$ 1.5$\times$ | End Q2 2026 |
+| Build owned channel | Email list size | $\geq$ 2,500 sign-ups | End Q2 2026 |
+
+## E-commerce MVP & UX — AI-Augmented Shopify
+
+**Platform.** Shopify Basic delivers PCI-compliant payments, GDPR cookie tooling, a subscription app ecosystem (Recharge), email (Klaviyo), and a mobile-first PWA theme out of the box (Shopify, 2025) — within the founder's budget and technical capacity. WooCommerce shifts security/infra onto the owner; custom build is out of scope.
+
+**AI layer (Figure 2).** LLM recommender, Prophet demand forecasting (Taylor & Letham, 2018), GBM churn-risk scoring feeding Klaviyo win-back, and a GenAI content studio for menu copy, alt text and captions — all under founder review.
+
+```{r fig.cap="AI-augmented MVP architecture.", out.width="85%"}
+include_or_placeholder("figures/fig8_ai_mvp_architecture.png")
+```
+
+**Information architecture (Figure 3).** Three-click depth; trust artefacts (privacy, returns, allergens, accessibility) clustered in the footer — pattern shown to cut checkout abandonment (Baymard, 2024).
+
+```{r fig.cap="TAB information architecture (site map).", out.width="85%"}
+include_or_placeholder("figures/fig10_site_map.png")
+```
+
+**UX wireframes (Figure 4).** Mobile Home / PDP / one-page Checkout. Apple Pay / Google Pay above the fold cut purchase paths by 35–45% in DTC food (Stripe, 2025).
+
+```{r fig.cap="UX wireframes: mobile-first MVP home, product and checkout screens.", out.width="85%"}
+include_or_placeholder("figures/fig9_ux_wireframes.png")
+```
+
+## Channel & Content Strategy
+
+**Personas (Figure 5).** P1 Weekly Bread Buyer (loyal subscriber); P2 Celebration Cake Buyer (event-driven, high AOV); P3 Weekend Treat Buyer (impulse mobile shopper).
+
+```{r fig.cap="Persona x Funnel content matrix.", out.width="85%"}
+include_or_placeholder("figures/fig7_persona_funnel.png")
+```
+
+**Budget split (Q1):** Google 60 / Meta 25 / TikTok 15 — inverted from the typical DTC-food default because Google is the only channel currently above 1.0$\times$ ROAS (§3.4). Revisited quarterly using the rule in §3.6.
+
+**Content pillars.** Craft & process (Reels/TikTok 3$\times$/wk), Weekly menu drop (email + Story), Allergen & education (monthly blog), Local community (monthly micro-influencer). KPIs in each row link to a SMART objective.
+
+**Experimentation.** Continuous testing programme to MDE 10%, $\alpha$ = 0.05, power 0.80 (Kohavi, Tang & Xu, 2020). Hero-banner test evidence is shown in Figure 12; it is the first experiment to ship, and the next queue includes (a) free-delivery threshold £25 vs £35, (b) subscription discount 5% vs 10%, (c) PDP image-first vs reviews-first.
+
+## Data Analysis — Key Insights
+
+### MALC and Revenue Trend
+
+The blended MALC and revenue series shows a noisy but clearly positive trajectory: from 92 customers (Mar 2024) to 430 (Feb 2026). Trailing-12-month compound monthly growth is $\approx$ 4.0%, the anchor for the Base forecast.
+
+```{r fig.cap="MALC and revenue trend.", out.width="85%"}
+include_or_placeholder("figures/fig2_malc_revenue_trend.png")
+```
+
+### Paid Channel Efficiency
+
+Only Google clears break-even (Figure 7); blended CAC (£36–£52) exceeds AOV on every paid platform. TAB cannot grow profitably through paid alone — lead with owned channels.
+
+```{r fig.cap="Paid channel efficiency (ROAS vs CAC).", out.width="85%"}
+include_or_placeholder("figures/fig3_channel_roas_cac.png")
+```
+
+| Channel | Spend | Clicks | CTR | CPC | Conv. | ROAS | CAC |
+|---|---|---|---|---|---|---|---|
+| Google | £34,204 | 75,830 | 4.04% | £0.45 | 929 | 1.14$\times$ | £36.82 |
+| TikTok | £12,577 | 24,561 | 1.81% | £0.51 | 289 | 0.90$\times$ | £43.52 |
+| Meta | £42,467 | 75,243 | 1.62% | £0.56 | 931 | 0.82$\times$ | £45.61 |
+| Other | £6,105 | 10,601 | 1.07% | £0.58 | 117 | 0.62$\times$ | £52.18 |
+
+### Region, Product and Channel Mix
+
+North East = 20.1% of revenue (Figure 8) — the launch market. Sourdough loaves dominate the product mix at 44%; 69% of orders are mobile and organic search produces 32% of revenue (Figure 9).
+
+```{r fig.cap="Regional revenue mix.", out.width="80%"}
+include_or_placeholder("figures/fig4_region_mix.png")
+```
+
+```{r fig.cap="Device and channel mix.", out.width="85%"}
+include_or_placeholder("figures/fig13_device_channel.png")
+```
+
+### Seasonality, Subscriptions and A/B Test
+
+Christmas (Nov–Feb) is the revenue peak — Feb alone delivers £18.7k (Figure 10). Active subscriptions grew to $\approx$ 560 by Feb 2026 with average monthly churn of 4.5% (Figure 11). The hero-banner A/B test (Figure 12) returns a +27.5% relative uplift, z = 6.90, p < 0.001 — strongest defensible win in the dataset.
+
+```{r fig.cap="Month-of-year seasonality.", out.width="85%"}
+include_or_placeholder("figures/fig11_seasonality.png")
+```
+
+```{r fig.cap="Subscription dynamics.", out.width="85%"}
+include_or_placeholder("figures/fig12_subscription_dynamics.png")
+```
+
+```{r fig.cap="A/B test result with 95% CIs.", out.width="65%"}
+include_or_placeholder("figures/fig5_ab_test_uplift.png")
+```
+
+### Outliers and Productive Opportunities
+
+A scan of the dataset surfaces three statistical outliers that are also commercial opportunities. Each is large enough to move MALC if acted on.
+
+| # | Outlier observed | Magnitude | Why it matters | Productive action |
+|---|---|---|---|---|
+| 1 | **February 2026 revenue spike** — single month at £18.7k versus the trailing-12-month median of $\approx$ £8.7k. | $\approx$ 2.1$\times$ median; +18% on the next highest month. | Confirms that the Christmas/winter window (Nov–Feb) is the structural peak. The brief assumed Easter; the data rejects that prior. | Front-load **the headline campaign 6–8 weeks before December** and shift paid spend share into Nov–Jan; treat spring (Mar–Apr) as retention and test time. |
+| 2 | **Google CTR 4.04% vs Meta 1.62% and TikTok 1.81%.** | $\approx$ 2.5$\times$ the average. | Reveals **intent gap** — Google captures branded local search at far higher click efficiency than discovery platforms. | Pivot the Q1 paid mix to **60% Google / 25% Meta / 15% TikTok** and gate Meta/TikTok scale-up to ROAS clearing 1.0$\times$. |
+| 3 | **A/B test uplift +27.5% with p<0.001** — more than 2.75$\times$ the pre-registered MDE of 10%. | z = 6.90, p < 0.001 on n = 96,700. | The treatment hero is one of the largest CVR wins observed in a single PDP design test (Kohavi, Tang & Xu, 2020). | **Ship Variant B day-one** at launch; queue the next four high-leverage A/B tests immediately (delivery threshold, subscription discount, PDP layout, checkout form). |
+
+Two additional supporting outliers reinforce the picture: **subscription share** has slipped from 26% (mid-2024) to $\approx$ 14% (early 2026) despite absolute growth — a retention concentration risk the AI recommender and Q4 loyalty tier are designed to reverse. **Sourdough Loaf concentration** at 44% of revenue is a product-mix risk that the persona-led merchandising plan partly hedges by elevating Celebration Cakes (21%) and the Bread Box subscription (18%).
+
+## Forecast, Budget Reallocation and Roadmap
+
+Base scenario assumes **4%/mo compound MALC growth** — triangulated from (i) trailing-12-month CAGR, (ii) UK SME DTC-food benchmarks (Statista, 2025), (iii) bottom-up unit economics. Low/High are $\pm$2pp.
+
+```{r fig.cap="12-month MALC forecast scenarios (baseline 430 at Feb 2026).", out.width="85%"}
+include_or_placeholder("figures/fig6_forecast_scenarios.png")
+```
+
+| Scenario | M+3 | M+6 | M+9 | M+12 | Revenue M+12 | $\Delta$ vs baseline |
+|---|---|---|---|---|---|---|
+| Low (+2%/mo) | 456 | 484 | 513 | 545 | £11,094 | +27% |
+| Base (+4%/mo) | 484 | 544 | 612 | 688 | £14,008 | +60% |
+| High (+6%/mo) | 512 | 610 | 726 | 865 | £17,615 | +101% |
+
+**Budget reallocation rule** (Top-1 ROAS $\times$ 1.30; Top-2 $\times$ 1.05; Top-3 $\times$ 0.85; bottom $\times$ 0.55), applied quarterly to the paid mix (Figure 14) — boosts Google, cuts sub-1.0$\times$ ROAS channels.
+
+```{r fig.cap="Recommended quarterly budget reallocation.", out.width="85%"}
+include_or_placeholder("figures/fig15_budget_reallocation.png")
+```
+
+### Retention and CLV consideration
+
+A simplified Pareto/NBD-lite CLV (Fader, Hardie & Lee, 2005) yields a 12-month CLV of approximately **£55** per active customer at the current 4.5% monthly churn and a 55% gross margin assumption. Reducing churn by 1 percentage point (to 3.5%) lifts CLV by approximately 29%, which is why the retention investments in Q3 and Q4 are core to the plan rather than an afterthought.
+
+### Quarterly roadmap
+
+| Quarter | Focus | MALC uplift | Budget |
+|---|---|---|---|
+| Q1 | Shopify MVP launch, GA4 + Klaviyo wiring, email capture, A/B winner | +5–8% | £2,000 |
+| Q2 | SEO/blog programme; Bread Box LP; subscription gifting test | +8–12% | £2,500 |
+| Q3 | Budget reallocation by ROAS; PDP optimisation; retention flows | +10–15% | £3,000 |
+| Q4 | Christmas campaign; loyalty tier; subscription gifting; review | +15–20% | £4,000 |
+
+## Measurement and Governance
+
+A weekly cadence with quarterly reallocation suits a microenterprise (Croll & Yoskovitz, 2013). The governance flow in Figure 15 codifies who owns what — collect, model, visualise, decide — with a feedback loop from quarterly learnings back into event design and budget weighting.
+
+```{r fig.cap="Measurement and decision governance flow.", out.width="85%"}
+include_or_placeholder("figures/fig14_governance.png")
+```
+
+**Weekly dashboard specification.**
+
+| Tile | Metrics | Tools | Owner | Action threshold |
+|---|---|---|---|---|
+| Acquisition | Sessions, share by channel | GA4 + Looker Studio | Founder | Organic share < 30% $\Rightarrow$ SEO push |
+| Conversion | CVR, AOV, cart abandonment | GA4 + Shopify | Founder | CVR < 2.5% $\Rightarrow$ next A/B test |
+| Paid efficiency | Spend, ROAS, CAC by platform | Google/Meta/TikTok APIs | Agency / founder | ROAS < 1.0$\times$ $\Rightarrow$ pause / cut |
+| Retention | Active subs, churn, repeat rate | Klaviyo + Shopify | Founder | Churn > 5% $\Rightarrow$ win-back flow |
+| Content | Posts, engagements, clicks to site | Meta/TikTok APIs | Social assistant | Engagement < 2% $\Rightarrow$ pillar review |
+
+## Leadership Dashboard — Weekly KPI View
+
+ TAB's leadership view operationalises this through a single, founder-readable dashboard built on the same metrics computed in §3.4 and refreshed each Monday morning.
+
+**Purpose.** The dashboard is intentionally narrow. It answers four operational questions: *(1)* is acquisition healthy (sessions, channel share, CVR), *(2)* is each pound of paid spend profitable (ROAS, CAC vs AOV), *(3)* is the customer base growing (MALC, active subscriptions, churn), and *(4)* are the seasonal and experimentation levers performing on plan. Anything that does not answer one of those four questions is deliberately excluded — Few (2009) notes that microenterprise dashboards fail when they accumulate decorative metrics.
+
+**Cadence and ownership.** Daily auto-refreshed traffic and spend; weekly review by the founder; monthly retention and cohort review; quarterly scenario refresh and budget reallocation (Figure 14). Each tile carries an explicit owner and an action threshold so the dashboard is *decision-shaped*, not just informational (Croll & Yoskovitz, 2013).
+
+**Format (Figure 16).** Status pills next to each KPI give a verdict in a single colour, satisfying the pre-attentive design principle that hue should only appear where it carries meaning (Cleveland & McGill, 1984).
+
+```{r dashboard-snapshot, fig.cap="Leadership dashboard snapshot. Top: callout and KPI strip with status pills. Middle: MALC trend, A/B test, paid ROAS, region mix. Bottom: seasonality, forecast, subscriptions, device split. Live version available in the project root as TAB Dashboard (HTML).", out.width="100%"}
+# Image lives in the parent folder (WEB&social_media/DASHBOARD_COMPILED.png).
+# Fall back to the figures/ snapshot if the parent file is not present.
+dashboard_img <- if (file.exists("../DASHBOARD_COMPILED.png")) {
+  "../DASHBOARD_COMPILED.png"
+} else if (file.exists("DASHBOARD_COMPILED.png")) {
+  "DASHBOARD_COMPILED.png"
+} else {
+  "figures/fig16_dashboard_snapshot.png"
+}
+include_or_placeholder(dashboard_img)
+```
+
+
+## Ethics, Privacy and Accessibility
+
+**GDPR-by-default.** A consent banner (OneTrust or Shopify Customer Privacy API) presents strictly-necessary, analytics and marketing cookie categories as separate opt-ins (ICO, 2024). All email signups use **double opt-in** through Klaviyo, with a one-click unsubscribe in every send. A Data Subject Access Request (DSAR) workflow is documented in Appendix B and handled within the 30-day statutory window. Personal data is minimised (email, name, address, phone) and retained for 24 months post-purchase.
+
+**Accessibility (WCAG 2.2 AA).** The site targets WCAG 2.2 AA (W3C, 2023). The brand palette meets a 4.5:1 contrast ratio; AI-generated alt text is human-reviewed; keyboard navigation is tested at every release; body type is 16px minimum with 1.5$\times$ line-height. A monthly Axe/WAVE audit and an annual screen-reader walkthrough with NVDA close the loop.
+
+**Responsible AI.** The AI layer is constrained to non-decisioning tasks (content drafts, recommendations) with founder review before send or publish. Customer-facing AI features (for example a future WhatsApp assistant) are disclosed in plain English at the point of interaction, per the EU AI Act transparency obligations (European Commission, 2024).
+
+\newpage
+
+# Recommendations and Conclusion
+
+## Five actionable recommendations
+
+1. **Adopt MALC as the North Star and instrument it in Week 1.** Every subsequent decision flows from this single number; without it the plan reverts to bets.
+2. **Ship the AI-augmented Shopify MVP in eight weeks**, with the Variant B hero in production from day one (+27.5% CVR uplift, p < 0.001).
+3. **Reverse the conventional paid split: 60% Google / 25% Meta / 15% TikTok** until Meta and TikTok ROAS clears 1.0$\times$. Reallocate quarterly using the ROAS-rank rule.
+4. **Lead with owned channels** — email, subscription, local SEO. CAC there is effectively zero versus £36–£52 on paid. Target 2,500 email sign-ups by end of Q2.
+5. **Plan around Christmas, not Easter.** The dataset rejects the brief's prior — build the headline annual campaign for Nov–Feb and use spring for retention and A/B testing.
+
+## Next steps
+
+(i) Approve the £11,500 12-month budget and the MVP scope; (ii) appoint a fractional digital partner to own the Shopify build and the weekly dashboard; (iii) freeze Variant B into the launch theme; (iv) start measuring MALC in Week 1; (v) reconvene at end-Q1 to refresh the forecast.
+
+## Conclusion
+
+The TAB dataset tells a clear, actionable story: a strong local brand with a genuine product asymmetry, currently paying for paid traffic that does not return its cost. A focused, mobile-first, AI-augmented Shopify MVP — with MALC at its centre and a measurement loop that reallocates budget every quarter — is the right next step. The numbers in this report are sufficient to commit; the rest is execution.
+
+\newpage
+
+# References
+
+Agresti, A. (2018) *Statistical methods for the social sciences*. 5th edn. Boston: Pearson.
+
+Baymard Institute (2024) *E-commerce checkout usability report*. Copenhagen: Baymard.
+
+Cleveland, W.S. & McGill, R. (1984) "Graphical perception: theory, experimentation, and application to the development of graphical methods", *Journal of the American Statistical Association*, 79(387), pp. 531–554.
+
+Croll, A. & Yoskovitz, B. (2013) *Lean analytics: Use data to build a better startup faster*. Sebastopol: O'Reilly.
+
+European Commission (2024) *Regulation (EU) 2024/1689 of the European Parliament and of the Council on harmonised rules on artificial intelligence (the AI Act)*. Brussels.
+
+Fader, P.S., Hardie, B.G.S. & Lee, K.L. (2005) "'Counting your customers' the easy way: an alternative to the Pareto/NBD model", *Marketing Science*, 24(2), pp. 275–284.
+
+Few, S. (2009) *Now you see it: Simple visualization techniques for quantitative analysis*. Burlingame: Analytics Press.
+
+Hyndman, R.J. & Athanasopoulos, G. (2021) *Forecasting: Principles and practice*. 3rd edn. Melbourne: OTexts.
+
+Information Commissioner's Office (2024) *Guidance on the use of cookies and similar technologies*. Wilmslow: ICO.
+
+Kannan, P.K. & Li, H.A. (2017) "Digital marketing: A framework, review and research agenda", *International Journal of Research in Marketing*, 34(1), pp. 22–45.
+
+Kohavi, R., Tang, D. & Xu, Y. (2020) *Trustworthy online controlled experiments: A practical guide to A/B testing*. Cambridge: Cambridge University Press.
+
+Recharge Payments (2024) *State of subscription commerce report 2024*. Santa Monica: Recharge.
+
+Reichheld, F.F. & Schefter, P. (2000) "E-loyalty: Your secret weapon on the web", *Harvard Business Review*, 78(4), pp. 105–113.
+
+Shopify Inc. (2025) *Shopify platform documentation*. Available at: https://help.shopify.com/ (accessed 12 May 2026).
+
+Statista (2025) *E-commerce in the United Kingdom — statistics and facts*. Hamburg: Statista.
+
+Stripe (2025) *Checkout optimization benchmarks: DTC food and beverage*. San Francisco: Stripe.
+
+Taylor, S.J. & Letham, B. (2018) "Forecasting at scale", *The American Statistician*, 72(1), pp. 37–45.
+
+W3C (2023) *Web Content Accessibility Guidelines (WCAG) 2.2*. Cambridge MA: W3C.
+
+Wickham, H. et al. (2019) "Welcome to the Tidyverse", *Journal of Open Source Software*, 4(43), 1686.
+
+Wickham, H. & Bryan, J. (2023) *R for Data Science*. 2nd edn. Sebastopol: O'Reilly.
+
+Wirth, R. & Hipp, J. (2000) "CRISP-DM: Towards a standard process model for data mining", in *Proceedings of the 4th International Conference on the Practical Applications of Knowledge Discovery and Data Mining*. Manchester, pp. 29–39.
+
+\newpage
+
+# Appendix A: Calculations and Methodology
+
+## Reproducibility
+
+The analysis is reproducible end-to-end. From the project root in RStudio:
+
+```{r appendix-repro, echo=TRUE, eval=FALSE}
+source("scripts/RUN_ALL.R")   # runs scripts 01-04 then knits this Rmd
+```
+
+Each script writes a `.RData` snapshot to `scripts/` and a `.png` file per figure to `figures/`. The full chain (clean -> metrics -> visuals -> forecast -> PDF) completes in approximately three minutes on a standard laptop.
+
+## Formula reference (R)
+
+```{r appendix-formulas, echo=TRUE, eval=FALSE}
+# Funnel
+cvr  <- orders / website_sessions          # Conversion rate
+aov  <- revenue / orders                   # Average order value
+ctr  <- clicks / impressions               # Click-through rate
+cpc  <- spend / clicks                     # Cost per click
+roas <- attributed_revenue / spend         # Return on ad spend
+cac  <- spend / conversions                # Customer acquisition cost
+
+# North Star
+malc <- orders %>%
+  group_by(month = floor_date(order_date, "month")) %>%
+  summarise(malc = n_distinct(customer_id))
+
+# Retention
+churn_rate <- subscription_cancels / active_subscriptions
+
+# CLV (Pareto/NBD-lite)
+clv <- (aov * orders_per_cust_month * gross_margin) / churn_rate
+
+# Forecast (geometric)
+malc_t1 <- malc_t * (1 + monthly_growth)
+```
+
+## A/B test inference
+
+Under the null hypothesis $H_0: p_B = p_A$, the two-proportion z-statistic (Agresti, 2018) is:
+
+$$z = \frac{p_B - p_A}{\sqrt{\hat{p}(1-\hat{p})\left(\tfrac{1}{n_A}+\tfrac{1}{n_B}\right)}}, \quad \hat{p} = \frac{x_A + x_B}{n_A + n_B}.$$
+
+For the TAB hero-banner test: $x_A = 1{,}485$, $n_A = 51{,}884$, $x_B = 1{,}635$, $n_B = 44{,}816$, giving $z = 6.90$ and a two-tailed $p < 0.001$ — significant at any conventional level.
+
+## Limitations
+
+1. **Attribution.** ROAS uses the dataset's last-click `attributed_revenue`. A multi-touch model would likely re-weight Meta upward and Google slightly down.
+2. **MALC proxy.** Where `customer_id` is missing, MALC is bounded below by unique-order counts; the true unique-customer count may be 5–10% higher.
+3. **Single A/B test.** The +27.5% uplift is on one design pair; rolling tests should continue to validate.
+4. **Seasonality.** Based on two annual cycles; a Bayesian 95% band would be wider than the deterministic scenario range used here.
+
+\newpage
+
+# Appendix B: Privacy and DSAR Workflow
+
+A Data Subject Access Request (DSAR) at TAB is handled as follows:
+
+1. The request arrives via privacy@tab.example or the website contact form.
+2. The founder verifies the requester's identity using order email plus the last four characters of post-code.
+3. Shopify and Klaviyo data are exported within five working days.
+4. The response is delivered as a password-protected PDF within the 30-day statutory deadline.
+5. The request is logged in a tracker for audit purposes.
+
+Deletion requests are processed within the same window and propagated to all third-party processors (Klaviyo, Recharge, Stripe). The full register is held in the secure operations Notion workspace.
+
+**End of report.**

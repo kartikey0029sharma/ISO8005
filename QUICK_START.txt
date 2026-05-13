@@ -1,0 +1,215 @@
+╔════════════════════════════════════════════════════════════════════╗
+║  ISO8005 TAB REPORT - QUICK START GUIDE                            ║
+╚════════════════════════════════════════════════════════════════════╝
+
+YOUR PROJECT IS READY TO RUN!
+
+Project Location:
+  C:\Users\DELL\Desktop\UNIVERSITY\WEB&social_media\ISO8005_TAB_Report
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1: OPEN RSTUDIO PROJECT
+────────────────────────────
+
+In RStudio:
+  File → Open Project → Navigate to ISO8005_TAB_Report folder
+  → Click ISO8005_TAB_Report.Rproj and click Open
+
+Or from command line:
+  open ISO8005_TAB_Report/ISO8005_TAB_Report.Rproj
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 2: INSTALL PACKAGES (first time only)
+───────────────────────────────────────────
+
+Copy this into RStudio Console and press Enter:
+
+packages <- c("readxl", "tidyverse", "lubridate", "janitor", "scales",
+              "knitr", "kableExtra", "patchwork", "broom", "gt", "here")
+for (pkg in packages) {
+  if (!require(pkg, character.only = TRUE)) {
+    install.packages(pkg)
+  }
+}
+cat("✓ All packages installed\n")
+
+⏱ Expected time: 2-3 minutes
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 3: RUN EVERYTHING AUTOMATICALLY
+─────────────────────────────────────
+
+In RStudio Console, paste this:
+
+source("scripts/RUN_ALL.R")
+
+This will:
+  ✓ Load and clean all Excel sheets
+  ✓ Calculate CVR, AOV, CAC, ROAS, MALC, etc.
+  ✓ Create 6 publication-quality figures
+  ✓ Build 12-month forecast with scenarios
+  ✓ Knit the final PDF report
+
+⏱ Expected time: 10 minutes total
+
+Output files will be created in:
+  → figures/        (6 PNG charts)
+  → scripts/        (RData files with metrics)
+  → output/         (ISO8005_TAB_Report.pdf) ← YOUR FINAL DELIVERABLE
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OR RUN SCRIPTS INDIVIDUALLY
+────────────────────────────
+
+If you prefer to inspect output at each step:
+
+1. Open scripts/01_load_clean_data.R
+   → Click "Source" button (Ctrl+Shift+S)
+   → Check console output for data quality
+
+2. Open scripts/02_metric_calculations.R
+   → Click "Source"
+   → See CVR, AOV, ROAS, MALC, etc. printed to console
+
+3. Open scripts/03_visuals.R
+   → Click "Source"
+   → Watch 6 charts save to figures/ folder
+
+4. Open scripts/04_forecast_model.R
+   → Click "Source"
+   → See forecast scenarios and roadmap
+
+5. Open ISO8005_TAB_Report.Rmd
+   → Click "Knit" button (Ctrl+Shift+K)
+   → Wait ~3 minutes for PDF to render
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+AFTER GENERATING THE REPORT
+───────────────────────────
+
+1. ✓ Open output/ISO8005_TAB_Report.pdf
+
+2. ✓ Check word count:
+   - Paste PDF text into https://wordcounter.net/
+   - Target: 2000 ± 200 words (excludes figures, tables, references)
+
+3. ✓ Fill in placeholder sections:
+   - Section 2.1: "The R analysis shows..."
+   - Section 2.5: "Finding 1-4" with actual data insights
+   - Cover page: Student Number [Add here]
+
+4. ✓ Verify all 6 figures render correctly in PDF
+
+5. ✓ Save for submission (keep all R scripts for retention requirement)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FOLDER CONTENTS
+───────────────
+
+ISO8005_TAB_Report/
+├── README.md                    ← Full documentation
+├── QUICK_START.txt              ← This file
+├── METRICS_GLOSSARY.md          ← Definition of all metrics
+├── ISO8005_TAB_Report.Rproj     ← RStudio project file
+├── ISO8005_TAB_Report.Rmd       ← Main report (knits to PDF)
+│
+├── data/
+│   └── ISO8005 Tyne Artisan Bakery(TAB) issued AY2526 (1).xlsx
+│
+├── scripts/
+│   ├── 01_load_clean_data.R     ← Step 1
+│   ├── 02_metric_calculations.R ← Step 2
+│   ├── 03_visuals.R             ← Step 3
+│   ├── 04_forecast_model.R      ← Step 4
+│   └── RUN_ALL.R                ← Runs all 4 steps + knit
+│
+├── figures/                      ← Output: 6 PNG charts
+│   ├── fig1_growth_logic.png
+│   ├── fig2_malc_revenue_trend.png
+│   ├── fig3_channel_roas_cac.png
+│   ├── fig4_region_mix.png
+│   ├── fig5_ab_test_uplift.png
+│   └── fig6_forecast_scenarios.png
+│
+├── output/                       ← Output: Final PDF
+│   └── ISO8005_TAB_Report.pdf
+│
+└── appendix/                     ← For development file retention
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TROUBLESHOOTING
+───────────────
+
+❌ "Excel file not found"
+→ Make sure the Excel file is in the data/ folder
+→ Check filename matches exactly in script line ~15
+
+❌ "Package not found" (e.g., readxl)
+→ Go back to STEP 2 and install packages
+→ Make sure you run the full package install code
+
+❌ "Figures won't render in PDF"
+→ Re-run scripts/03_visuals.R to regenerate PNGs
+→ Check that figures/ folder contains all 6 PNG files
+→ Then re-knit the Rmd
+
+❌ "PDF won't knit / LaTeX error"
+→ Install tinytex:
+   tinytex::install_tinytex()
+→ Or knit to HTML first to identify errors:
+   rmarkdown::render("ISO8005_TAB_Report.Rmd", output_format = "html_document")
+
+❌ "Word count is wrong"
+→ Use https://wordcounter.net/ (it auto-excludes headers, figures, tables)
+→ If too long: trim section 2.5 (Data Analysis) or 2.3 (Channel Strategy)
+→ If too short: expand section 2.6 (Forecast) with more detail
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+KEY CUSTOMIZATION POINTS
+───────────────────────
+
+1. Student Number
+   → Edit ISO8005_TAB_Report.Rmd, line ~5
+   → Change "Student Number: [Add here]" to your ID
+
+2. Data Insights
+   → Replace [INSERT TITLE] and [INSERT FINDING] sections
+   → Run the scripts first to see actual numbers in Console
+
+3. Budget Figures
+   → Adjust multipliers in scripts/04_forecast_model.R
+   → Based on your actual baseline revenue
+
+4. Regional Names
+   → Update local_regions variable in 02_metric_calculations.R
+   → Must match exactly to your Excel data
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STILL STUCK?
+────────────
+
+Read these files (in order):
+  1. README.md         ← Overview and detailed instructions
+  2. METRICS_GLOSSARY  ← Understand what each metric means
+  3. Check inline comments in the R scripts (they explain every step)
+  4. Google your error message on Stack Overflow
+  5. Run the script line-by-line (Ctrl+Enter) to debug
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+YOU'RE ALL SET! 🎯
+
+Now open RStudio and run:
+  source("scripts/RUN_ALL.R")
+
+Good luck! You've got a professional, production-ready workflow.
+
