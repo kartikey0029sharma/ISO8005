@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tyne Artisan Bakery — Leadership Dashboard</title>
+<style>
+:root{
+  /* Tableau-like palette sampled from uploaded images */
+  --blue:#2F8FE8;
+  --blue-soft:#9FD1F0;
+  --blue-bg:#A8D0EA;
+  --green:#8CCF7E;
+  --green-dk:#15966B;
+  --coral:#EE6B70;
+  --coral-dk:#D94F5A;
+  --pink:#F7BDD3;
+  --orange:#F39A24;
+  --orange-dk:#D47B12;
+  --yellow:#F2D55C;
+  --navy:#4E79A7;
+  --grey:#777777;
+  --grey-lt:#BCBCBC;
+  --ink:#222222;
+  --muted:#6E6E6E;
+  --card:#FFFFFF;
+  --bg:#EFEFEF;
+  --rail:#D9D9D9;
+  --panel:#222222;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;
+  font-size:14px;line-height:1.35;-webkit-font-smoothing:antialiased;}
+body{padding:14px;}
+.shell{max-width:1520px;margin:0 auto;padding:8px;background:#F5F5F5;border:1px solid #B8B8B8;}
+.hero{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  background:#FFFFFF;border:1.5px solid var(--panel);padding:12px 16px;margin-bottom:10px;}
+.hero h1{margin:0;font-size:23px;line-height:1.08;font-weight:800;letter-spacing:.1px;color:#111111;}
+.hero .sub{color:var(--muted);font-size:12.5px;margin-top:6px;}
+.hero .badge{font-size:10px;color:#216DA8;background:#EAF5FC;border:1px solid var(--blue-soft);
+  padding:6px 9px;border-radius:0;font-weight:800;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;}
+
+.callout{background:#FFFFFF;border:2px solid var(--coral);color:var(--coral-dk);
+  padding:13px 16px;border-radius:0;margin-bottom:10px;display:flex;align-items:center;gap:16px;}
+.callout .num{font-size:34px;font-weight:800;line-height:1;color:var(--coral-dk);}
+.callout .copy{font-size:13px;color:var(--ink);}
+.callout b{color:var(--coral-dk);}
+
+/* KPI cards match the uploaded screenshot: white cards, bright borders, centred metric values */
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:10px;}
+.kpi{background:var(--card);border-radius:0;padding:14px 16px 13px;min-height:116px;
+  border:2px solid var(--blue);text-align:center;box-shadow:none;position:relative;}
+.kpi:after{content:"▲";position:absolute;right:18px;top:10px;font-size:14px;font-weight:800;color:inherit;}
+.kpi:nth-child(3):after{content:"~";font-size:18px;top:7px;}
+.kpi-label{font-size:10px;color:#343A40;text-transform:uppercase;letter-spacing:.08em;font-weight:800;margin-bottom:21px;}
+.kpi-value{font-size:31px;font-weight:800;line-height:1;margin-bottom:14px;letter-spacing:.4px;}
+.kpi-sub{font-size:12px;color:#555555;font-weight:700;}
+
+.pill{display:inline-block;font-size:11px;padding:3px 9px;border-radius:0;font-weight:800;border:1px solid rgba(0,0,0,.08);}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;}
+.tile{background:var(--card);border-radius:0;padding:10px 12px;border:1.5px solid var(--panel);box-shadow:none;overflow:hidden;}
+.tile h2{margin:0 0 8px;font-size:15px;font-weight:800;color:#111;letter-spacing:.05px;}
+.tile .take{margin-top:8px;font-size:12.5px;color:#555;line-height:1.45;border-top:1px solid var(--rail);padding-top:8px;background:#FBFBFB;margin-left:-12px;margin-right:-12px;margin-bottom:-10px;padding-left:12px;padding-right:12px;padding-bottom:9px;}
+.tile .take b{color:#111;}
+.span-12{grid-column:span 12;}
+.span-8{grid-column:span 8;}
+.span-6{grid-column:span 6;}
+.span-4{grid-column:span 4;}
+svg{width:100%;height:auto;display:block;background:#FFFFFF;border-top:1px solid #ECECEC;}
+svg text{font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;}
+@media(max-width:1100px){
+  .kpis{grid-template-columns:repeat(3,1fr);}
+  .span-8,.span-6,.span-4{grid-column:span 12;}
+}
+@media(max-width:720px){
+  body{padding:6px;}
+  .shell{padding:5px;}
+  .hero{align-items:flex-start;flex-direction:column;}
+  .kpis{grid-template-columns:1fr;}
+}
+
+table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;}
+th,td{text-align:left;padding:8px 7px;border-bottom:1px solid var(--rail);}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#555;background:#F7F7F7;font-weight:800;}
+tbody tr:hover{background:#FAFAFA;}
+footer{margin-top:12px;color:#666;font-size:11px;text-align:center;background:#FFFFFF;border:1.5px solid var(--panel);padding:10px;}
+@media print{
+  body{background:#fff;padding:0;}
+  .shell{border:0;max-width:none;}
+  .tile,.kpi,.callout,.hero{break-inside:avoid;}
+}
+
+
+/* ================= A3 LANDSCAPE OPTIMISATION =================
+   Designed for A3 landscape export/print: 420mm × 297mm.
+   Layout is deliberately wider and flatter, following the uploaded Tableau-style dashboard. */
+@page{size:A3 landscape;margin:6mm;}
+
+/* Screen preview: wide, dashboard-like canvas */
+body{padding:10px;background:#E9E9E9;}
+.shell{max-width:1840px;width:min(1840px,calc(100vw - 20px));padding:7px;background:#F5F5F5;}
+.hero{padding:9px 13px;margin-bottom:7px;}
+.hero h1{font-size:21px;}
+.hero .sub{font-size:11.5px;margin-top:4px;}
+.hero .badge{font-size:9px;padding:5px 8px;}
+.callout{padding:9px 13px;margin-bottom:7px;gap:12px;}
+.callout .num{font-size:30px;}
+.callout .copy{font-size:12px;line-height:1.25;}
+.kpis{grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;margin-bottom:7px;}
+.kpi{min-height:86px;padding:10px 12px 9px;border-width:1.8px;}
+.kpi:after{right:12px;top:7px;font-size:12px;}
+.kpi-label{font-size:8.7px;margin-bottom:13px;letter-spacing:.07em;}
+.kpi-value{font-size:25px;margin-bottom:7px;}
+.kpi-sub{font-size:10px;line-height:1.15;}
+
+/* 24-column layout keeps the page horizontal rather than tall. */
+.grid{grid-template-columns:repeat(24,minmax(0,1fr));gap:5px;align-items:stretch;}
+.grid>.tile{grid-column:auto;}
+.grid>.tile:nth-child(1){grid-column:span 10;} /* MALC trend */
+.grid>.tile:nth-child(2){grid-column:span 4;}  /* A/B test */
+.grid>.tile:nth-child(3){grid-column:span 5;}  /* ROAS */
+.grid>.tile:nth-child(4){grid-column:span 5;}  /* Region */
+.grid>.tile:nth-child(5){grid-column:span 5;}  /* Subscription */
+.grid>.tile:nth-child(6){grid-column:span 9;}  /* Seasonality */
+.grid>.tile:nth-child(7){grid-column:span 5;}  /* Forecast */
+.grid>.tile:nth-child(8){grid-column:span 5;}  /* Device */
+.grid>.tile:nth-child(9){grid-column:span 5;}  /* Revenue channel */
+.grid>.tile:nth-child(10){grid-column:span 5;} /* Product mix */
+.grid>.tile:nth-child(11){grid-column:span 14;} /* Detail table */
+.tile{padding:7px 8px;border-width:1.25px;}
+.tile h2{font-size:12.2px;margin-bottom:5px;}
+.tile .take{font-size:10.2px;line-height:1.25;margin-top:5px;padding-top:5px;margin-left:-8px;margin-right:-8px;margin-bottom:-7px;padding-left:8px;padding-right:8px;padding-bottom:6px;}
+table{font-size:10.4px;}
+th,td{padding:5px 5px;}
+th{font-size:8.4px;}
+footer{margin-top:7px;padding:6px;font-size:9px;}
+
+/* Use available horizontal space in donut cards while protecting labels from overlap. */
+.grid>.tile:nth-child(8) svg,
+.grid>.tile:nth-child(9) svg,
+.grid>.tile:nth-child(10) svg{max-height:185px;}
+
+/* Responsive fallback for narrower screens only. */
+@media(max-width:1000px){
+  .shell{width:auto;max-width:none;}
+  .grid{grid-template-columns:repeat(12,minmax(0,1fr));}
+  .grid>.tile:nth-child(n){grid-column:span 12;}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+
+/* Print/PDF: compact one-page A3 landscape dashboard. */
+@media print{
+  html,body{width:420mm;height:297mm;margin:0;background:#FFFFFF;overflow:hidden;}
+  body{padding:0;}
+  .shell{width:408mm;max-width:none;margin:0 auto;padding:3mm;border:0;background:#F5F5F5;}
+  .hero{padding:5px 8px;margin-bottom:4px;border-width:1px;}
+  .hero h1{font-size:15.5px;line-height:1;}
+  .hero .sub{font-size:8.8px;margin-top:2px;}
+  .hero .badge{font-size:7px;padding:2px 5px;}
+  .callout{padding:5px 7px;margin-bottom:4px;gap:8px;border-width:1px;}
+  .callout .num{font-size:21px;}
+  .callout .copy{font-size:8.6px;line-height:1.12;}
+  .kpis{gap:4px;margin-bottom:4px;}
+  .kpi{min-height:54px;padding:5px 7px 4px;border-width:1px;}
+  .kpi:after{right:7px;top:4px;font-size:8px;}
+  .kpi-label{font-size:6.5px;margin-bottom:6px;letter-spacing:.06em;}
+  .kpi-value{font-size:17px;margin-bottom:3px;}
+  .kpi-sub{font-size:6.9px;line-height:1.05;}
+  .grid{grid-template-columns:repeat(24,minmax(0,1fr));gap:3px;}
+  .grid>.tile:nth-child(1){grid-column:span 10;}
+  .grid>.tile:nth-child(2){grid-column:span 4;}
+  .grid>.tile:nth-child(3){grid-column:span 5;}
+  .grid>.tile:nth-child(4){grid-column:span 5;}
+  .grid>.tile:nth-child(5){grid-column:span 5;}
+  .grid>.tile:nth-child(6){grid-column:span 9;}
+  .grid>.tile:nth-child(7){grid-column:span 5;}
+  .grid>.tile:nth-child(8){grid-column:span 5;}
+  .grid>.tile:nth-child(9){grid-column:span 5;}
+  .grid>.tile:nth-child(10){grid-column:span 5;}
+  .grid>.tile:nth-child(11){grid-column:span 14;}
+  .tile{padding:4px 5px;border-width:.8px;break-inside:avoid;}
+  .tile h2{font-size:8.8px;margin-bottom:2px;line-height:1.05;}
+  .tile .take{font-size:6.5px;line-height:1.08;margin-top:2px;padding-top:2px;margin-left:-5px;margin-right:-5px;margin-bottom:-4px;padding-left:5px;padding-right:5px;padding-bottom:3px;}
+  svg{border-top:.5px solid #ECECEC;}
+  .grid>.tile:nth-child(8) svg,
+  .grid>.tile:nth-child(9) svg,
+  .grid>.tile:nth-child(10) svg{max-height:120px;}
+  table{font-size:7.1px;line-height:1.05;}
+  th,td{padding:2.5px 3px;}
+  th{font-size:6.2px;}
+  .pill{font-size:6.3px;padding:1px 4px;}
+  footer{font-size:6.5px;padding:3px;margin-top:3px;border-width:.8px;}
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="hero">
+    <div>
+      <h1>Tyne Artisan Bakery — Leadership Dashboard</h1>
+      <div class="sub">North Star: Monthly Active Local Customers (MALC) · Data window: Mar 2024 — Feb 2026</div>
+    </div>
+    <span class="badge">Executive view</span>
+  </div>
+
+  <div class="callout">
+    <div class="num">£36–£52</div>
+    <div class="copy">
+      <b>Paid CAC is more than 1.5x the £20.34 AOV.</b>
+      Only Google clears the 1.0x ROAS break-even.
+      Lead with owned channels — email, subscriptions, local SEO — before scaling Meta or TikTok.
+    </div>
+  </div>
+
+  <div class="kpis">
+      <div class="kpi" style="border-color:#2F8FE8;color:#2F8FE8">
+        <div class="kpi-label">MALC (North Star)</div>
+        <div class="kpi-value" style="color:#2F8FE8">430</div>
+        <div class="kpi-sub">+24% YoY ▲</div>
+      </div>
+      <div class="kpi" style="border-color:#15966B;color:#15966B">
+        <div class="kpi-label">Conversion rate</div>
+        <div class="kpi-value" style="color:#15966B">3.16%</div>
+        <div class="kpi-sub">Hits 3.0% target ▲</div>
+      </div>
+      <div class="kpi" style="border-color:#EE6B70;color:#D94F5A">
+        <div class="kpi-label">Average order value</div>
+        <div class="kpi-value" style="color:#D94F5A">£20.34</div>
+        <div class="kpi-sub">Below £25 stretch</div>
+      </div>
+      <div class="kpi" style="border-color:#15966B;color:#15966B">
+        <div class="kpi-label">Blended ROAS</div>
+        <div class="kpi-value" style="color:#15966B">3.07x</div>
+        <div class="kpi-sub">Above 1.0x break-even ▲</div>
+      </div>
+      <div class="kpi" style="border-color:#2F8FE8;color:#2F8FE8">
+        <div class="kpi-label">Active subscriptions</div>
+        <div class="kpi-value" style="color:#2F8FE8">561</div>
+        <div class="kpi-sub">Building toward 700</div>
+      </div>
+      <div class="kpi" style="border-color:#15966B;color:#15966B">
+        <div class="kpi-label">Monthly churn</div>
+        <div class="kpi-value" style="color:#15966B">4.5%</div>
+        <div class="kpi-sub">Within 5% healthy band ▲</div>
+      </div></div>
+
+  <div class="grid">
+
+    <div class="tile span-8">
+      <h2>1 · MALC trend — the North Star</h2>
+      <svg viewBox="0 0 760 270" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;"><line x1="44" y1="226.0" x2="716" y2="226.0" stroke="#D9D9D9" stroke-width="1"/><text x="36" y="230.0" text-anchor="end" font-size="10" fill="#6E6E6E">0</text><line x1="44" y1="180.5" x2="716" y2="180.5" stroke="#D9D9D9" stroke-width="1"/><text x="36" y="184.5" text-anchor="end" font-size="10" fill="#6E6E6E">123</text><line x1="44" y1="135.0" x2="716" y2="135.0" stroke="#D9D9D9" stroke-width="1"/><text x="36" y="139.0" text-anchor="end" font-size="10" fill="#6E6E6E">247</text><line x1="44" y1="89.5" x2="716" y2="89.5" stroke="#D9D9D9" stroke-width="1"/><text x="36" y="93.5" text-anchor="end" font-size="10" fill="#6E6E6E">370</text><path d="M 44,226 L 44.0,192.1 L 73.2,169.7 L 102.4,163.1 L 131.7,156.1 L 160.9,159.4 L 190.1,162.0 L 219.3,167.8 L 248.5,143.9 L 277.7,146.9 L 307.0,127.0 L 336.2,125.2 L 365.4,98.3 L 394.6,163.4 L 423.8,172.3 L 453.0,153.5 L 482.3,159.4 L 511.5,148.7 L 540.7,164.5 L 569.9,166.0 L 599.1,144.3 L 628.3,144.7 L 657.6,124.1 L 686.8,118.2 L 716.0,67.7 L 716.0,226 Z" fill="#A8D0EA" opacity="0.55"/><path d="M 44.0,192.1 L 73.2,169.7 L 102.4,163.1 L 131.7,156.1 L 160.9,159.4 L 190.1,162.0 L 219.3,167.8 L 248.5,143.9 L 277.7,146.9 L 307.0,127.0 L 336.2,125.2 L 365.4,98.3 L 394.6,163.4 L 423.8,172.3 L 453.0,153.5 L 482.3,159.4 L 511.5,148.7 L 540.7,164.5 L 569.9,166.0 L 599.1,144.3 L 628.3,144.7 L 657.6,124.1 L 686.8,118.2 L 716.0,67.7" fill="none" stroke="#2F8FE8" stroke-width="2.4"/><circle cx="44.0" cy="192.1" r="3" fill="#2F8FE8"/><circle cx="131.7" cy="156.1" r="3" fill="#2F8FE8"/><circle cx="219.3" cy="167.8" r="3" fill="#2F8FE8"/><circle cx="307.0" cy="127.0" r="3" fill="#2F8FE8"/><circle cx="394.6" cy="163.4" r="3" fill="#2F8FE8"/><circle cx="482.3" cy="159.4" r="3" fill="#2F8FE8"/><circle cx="569.9" cy="166.0" r="3" fill="#2F8FE8"/><circle cx="657.6" cy="124.1" r="3" fill="#2F8FE8"/><circle cx="716.0" cy="67.7" r="3" fill="#2F8FE8"/><circle cx="716.0" cy="67.7" r="6" fill="#2F8FE8"/><text x="726.0" y="61.7" font-size="13" font-weight="700" fill="#2F8FE8">430 MALC</text><text x="44.0" y="244" text-anchor="middle" font-size="10" fill="#6E6E6E">Mar 24</text><text x="131.7" y="244" text-anchor="middle" font-size="10" fill="#6E6E6E">Jun 24</text><text x="219.3" y="244" text-anchor="middle" font-size="10" fill="#6E6E6E">Sep 24</text><text x="307.0" y="244" text-anchor="middle" font-size="10" fill="#6E6E6E">Dec 24</text><text x="394.6" y="244" text-anchor="middle" font-size="10" fill="#6E6E6E">Mar 25</text><text x="482.3" y="244" text-anchor="middle" font-size="10" fill="#6E6E6E">Jun 25</text><text x="569.9" y="244" text-anchor="middle" font-size="10" fill="#6E6E6E">Sep 25</text><text x="657.6" y="244" text-anchor="middle" font-size="10" fill="#6E6E6E">Dec 25</text><text x="716.0" y="244" text-anchor="middle" font-size="10" fill="#6E6E6E">Feb 26</text></svg>
+      <div class="take"><b>+4.0% compound monthly growth</b> over the trailing 12 months. Feb 2026 reached 430 active local customers — anchor for the Base forecast.</div>
+    </div>
+
+    <div class="tile span-4">
+      <h2>2 · A/B test — hero banner</h2>
+      <svg viewBox="0 0 360 240" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;"><rect x="90.0" y="111.8" width="70" height="76.2" fill="#BCBCBC" rx="3"/><rect x="200.0" y="90.9" width="70" height="97.1" fill="#8CCF7E" rx="3"/><text x="125.0" y="103.8" text-anchor="middle" font-size="14" font-weight="700" fill="#6E6E6E">2.86%</text><text x="235.0" y="82.9" text-anchor="middle" font-size="14" font-weight="700" fill="#15966B">3.65%</text><text x="125.0" y="206" text-anchor="middle" font-size="11" fill="#6E6E6E">Control</text><text x="235.0" y="206" text-anchor="middle" font-size="11" font-weight="700" fill="#15966B">Winner</text><defs><marker id="arr" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#15966B"/></marker></defs><path d="M 160.0 85.8 Q 180.0 38.9 200.0 64.9" stroke="#15966B" stroke-width="2.2" fill="none" marker-end="url(#arr)"/><text x="180.0" y="30.9" text-anchor="middle" font-size="12" font-weight="700" fill="#15966B">+27.5% · p&lt;0.001</text></svg>
+      <div class="take"><b>Roll out Variant B now.</b> +27.5% uplift, z=6.90, p&lt;0.001 — strongest, most defensible win in the dataset.</div>
+    </div>
+
+    <div class="tile span-4">
+      <h2>3 · Paid channel ROAS</h2>
+      <svg viewBox="0 0 380 250" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;"><rect x="84" y="21.0" width="102.1" height="45.0" fill="#EE6B70" rx="2"/><text x="76" y="48.5" text-anchor="end" font-size="12" fill="#222222" dominant-baseline="middle" font-weight="600">Other</text><text x="192.1" y="48.5" font-size="12" fill="#222222" dominant-baseline="middle" font-weight="700">0.62x</text><rect x="84" y="76.0" width="134.6" height="45.0" fill="#EE6B70" rx="2"/><text x="76" y="103.5" text-anchor="end" font-size="12" fill="#222222" dominant-baseline="middle" font-weight="600">Meta</text><text x="224.6" y="103.5" font-size="12" fill="#222222" dominant-baseline="middle" font-weight="700">0.82x</text><rect x="84" y="131.0" width="147.5" height="45.0" fill="#EE6B70" rx="2"/><text x="76" y="158.5" text-anchor="end" font-size="12" fill="#222222" dominant-baseline="middle" font-weight="600">TikTok</text><text x="237.5" y="158.5" font-size="12" fill="#222222" dominant-baseline="middle" font-weight="700">0.90x</text><rect x="84" y="186.0" width="186.7" height="45.0" fill="#8CCF7E" rx="2"/><text x="76" y="213.5" text-anchor="end" font-size="12" fill="#222222" dominant-baseline="middle" font-weight="600">Google</text><text x="276.7" y="213.5" font-size="12" fill="#222222" dominant-baseline="middle" font-weight="700">1.14x</text><line x1="247.8" y1="10" x2="247.8" y2="236" stroke="#222222" stroke-width="1" stroke-dasharray="3,3"/><text x="251.8" y="6" font-size="10" fill="#222222">break-even 1.0x</text></svg>
+      <div class="take"><b>Reallocate to Google.</b> The only paid channel above the 1.0x break-even. Meta, TikTok and Other currently destroy value.</div>
+    </div>
+
+    <div class="tile span-4">
+      <h2>4 · Regional revenue mix</h2>
+      <svg viewBox="0 0 400 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;"><rect x="122" y="19.0" width="29.9" height="18.4" fill="#BCBCBC" rx="2"/><text x="114" y="32.18181818181818" text-anchor="end" font-size="11" fill="#6E6E6E" dominant-baseline="middle" font-weight="400">Wales</text><text x="157.9" y="32.18181818181818" font-size="11" fill="#222222" dominant-baseline="middle" font-weight="400">£4,296 · 3.6%</text><rect x="122" y="45.36363636363636" width="38.3" height="18.4" fill="#BCBCBC" rx="2"/><text x="114" y="58.54545454545454" text-anchor="end" font-size="11" fill="#6E6E6E" dominant-baseline="middle" font-weight="400">Scotland</text><text x="166.3" y="58.54545454545454" font-size="11" fill="#222222" dominant-baseline="middle" font-weight="400">£5,493 · 4.5%</text><rect x="122" y="71.72727272727272" width="48.2" height="18.4" fill="#BCBCBC" rx="2"/><text x="114" y="84.9090909090909" text-anchor="end" font-size="11" fill="#6E6E6E" dominant-baseline="middle" font-weight="400">South West</text><text x="176.2" y="84.9090909090909" font-size="11" fill="#222222" dominant-baseline="middle" font-weight="400">£6,911 · 5.7%</text><rect x="122" y="98.0909090909091" width="52.4" height="18.4" fill="#BCBCBC" rx="2"/><text x="114" y="111.27272727272728" text-anchor="end" font-size="11" fill="#6E6E6E" dominant-baseline="middle" font-weight="400">West Midlands</text><text x="180.4" y="111.27272727272728" font-size="11" fill="#222222" dominant-baseline="middle" font-weight="400">£7,521 · 6.2%</text><rect x="122" y="124.45454545454545" width="58.3" height="18.4" fill="#BCBCBC" rx="2"/><text x="114" y="137.63636363636363" text-anchor="end" font-size="11" fill="#6E6E6E" dominant-baseline="middle" font-weight="400">East of England</text><text x="186.3" y="137.63636363636363" font-size="11" fill="#222222" dominant-baseline="middle" font-weight="400">£8,361 · 6.9%</text><rect x="122" y="150.8181818181818" width="59.6" height="18.4" fill="#BCBCBC" rx="2"/><text x="114" y="164.0" text-anchor="end" font-size="11" fill="#6E6E6E" dominant-baseline="middle" font-weight="400">East Midlands</text><text x="187.6" y="164.0" font-size="11" fill="#222222" dominant-baseline="middle" font-weight="400">£8,554 · 7.1%</text><rect x="122" y="177.1818181818182" width="78.9" height="18.4" fill="#BCBCBC" rx="2"/><text x="114" y="190.36363636363637" text-anchor="end" font-size="11" fill="#6E6E6E" dominant-baseline="middle" font-weight="400">London</text><text x="206.9" y="190.36363636363637" font-size="11" fill="#222222" dominant-baseline="middle" font-weight="400">£11,319 · 9.4%</text><rect x="122" y="203.54545454545453" width="80.3" height="18.4" fill="#BCBCBC" rx="2"/><text x="114" y="216.72727272727272" text-anchor="end" font-size="11" fill="#6E6E6E" dominant-baseline="middle" font-weight="400">Yorkshire & The Humber</text><text x="208.3" y="216.72727272727272" font-size="11" fill="#222222" dominant-baseline="middle" font-weight="400">£11,519 · 9.5%</text><rect x="122" y="229.9090909090909" width="96.8" height="18.4" fill="#BCBCBC" rx="2"/><text x="114" y="243.0909090909091" text-anchor="end" font-size="11" fill="#6E6E6E" dominant-baseline="middle" font-weight="400">North West</text><text x="224.8" y="243.0909090909091" font-size="11" fill="#222222" dominant-baseline="middle" font-weight="400">£13,889 · 11.5%</text><rect x="122" y="256.27272727272725" width="130.0" height="18.4" fill="#BCBCBC" rx="2"/><text x="114" y="269.45454545454544" text-anchor="end" font-size="11" fill="#6E6E6E" dominant-baseline="middle" font-weight="400">South East</text><text x="258.0" y="269.45454545454544" font-size="11" fill="#222222" dominant-baseline="middle" font-weight="400">£18,651 · 15.4%</text><rect x="122" y="282.6363636363636" width="169.5" height="18.4" fill="#2F8FE8" rx="2"/><text x="114" y="295.8181818181818" text-anchor="end" font-size="11" fill="#222222" dominant-baseline="middle" font-weight="600">North East</text><text x="297.5" y="295.8181818181818" font-size="11" fill="#222222" dominant-baseline="middle" font-weight="600">£24,317 · 20.1%</text></svg>
+      <div class="take"><b>North East = 20.1% of revenue.</b> The natural launch market for local delivery and click &amp; collect.</div>
+    </div>
+
+    <div class="tile span-4">
+      <h2>5 · Subscription dynamics (last 12 mo)</h2>
+      <svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;"><rect x="36.0" y="103.6" width="23.3" height="16.4" fill="#8CCF7E" rx="1"/><rect x="36.0" y="120.0" width="23.3" height="8.2" fill="#EE6B70" rx="1"/><rect x="63.3" y="94.2" width="23.3" height="25.8" fill="#8CCF7E" rx="1"/><rect x="63.3" y="120.0" width="23.3" height="7.0" fill="#EE6B70" rx="1"/><rect x="90.7" y="87.1" width="23.3" height="32.9" fill="#8CCF7E" rx="1"/><rect x="90.7" y="120.0" width="23.3" height="9.4" fill="#EE6B70" rx="1"/><rect x="118.0" y="66.0" width="23.3" height="54.0" fill="#8CCF7E" rx="1"/><rect x="118.0" y="120.0" width="23.3" height="11.7" fill="#EE6B70" rx="1"/><rect x="145.3" y="91.8" width="23.3" height="28.2" fill="#8CCF7E" rx="1"/><rect x="145.3" y="120.0" width="23.3" height="16.4" fill="#EE6B70" rx="1"/><rect x="172.7" y="85.9" width="23.3" height="34.1" fill="#8CCF7E" rx="1"/><rect x="172.7" y="120.0" width="23.3" height="16.4" fill="#EE6B70" rx="1"/><rect x="200.0" y="83.6" width="23.3" height="36.4" fill="#8CCF7E" rx="1"/><rect x="200.0" y="120.0" width="23.3" height="9.4" fill="#EE6B70" rx="1"/><rect x="227.3" y="83.6" width="23.3" height="36.4" fill="#8CCF7E" rx="1"/><rect x="227.3" y="120.0" width="23.3" height="22.3" fill="#EE6B70" rx="1"/><rect x="254.7" y="82.4" width="23.3" height="37.6" fill="#8CCF7E" rx="1"/><rect x="254.7" y="120.0" width="23.3" height="14.1" fill="#EE6B70" rx="1"/><rect x="282.0" y="83.6" width="23.3" height="36.4" fill="#8CCF7E" rx="1"/><rect x="282.0" y="120.0" width="23.3" height="21.1" fill="#EE6B70" rx="1"/><rect x="309.3" y="56.6" width="23.3" height="63.4" fill="#8CCF7E" rx="1"/><rect x="309.3" y="120.0" width="23.3" height="29.4" fill="#EE6B70" rx="1"/><rect x="336.7" y="55.4" width="23.3" height="64.6" fill="#8CCF7E" rx="1"/><rect x="336.7" y="120.0" width="23.3" height="17.6" fill="#EE6B70" rx="1"/><line x1="36" y1="120.0" x2="364" y2="120.0" stroke="#222222" stroke-width="0.7"/><text x="36" y="24" font-size="11" fill="#15966B" font-weight="700">New starts</text><text x="36" y="226" font-size="11" fill="#D94F5A" font-weight="700">Cancels</text></svg>
+      <div class="take"><b>Avg monthly churn 4.5%.</b> Net additions positive but starts have stalled — schedule AI win-back flows for Q3.</div>
+    </div>
+
+    <div class="tile span-8">
+      <h2>6 · Seasonality of revenue</h2>
+      <svg viewBox="0 0 760 250" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;"><rect x="36" y="6" width="10" height="10" fill="#2F8FE8"/><text x="50" y="15" font-size="11" fill="#222222">Winter peak</text><rect x="156" y="6" width="10" height="10" fill="#F39A24"/><text x="170" y="15" font-size="11" fill="#222222">Shoulder</text><rect x="256" y="6" width="10" height="10" fill="#EE6B70"/><text x="270" y="15" font-size="11" fill="#222222">Spring trough</text><rect x="376" y="6" width="10" height="10" fill="#BCBCBC"/><text x="390" y="15" font-size="11" fill="#222222">Off-peak</text><rect x="36.0" y="152.6" width="49.3" height="61.4" fill="#EE6B70" rx="2"/><text x="60.7" y="147.6" text-anchor="middle" font-size="10" fill="#222222" font-weight="700">£8.5k</text><text x="60.7" y="228.0" text-anchor="middle" font-size="10" fill="#6E6E6E">Mar</text><rect x="93.3" y="167.3" width="49.3" height="46.7" fill="#EE6B70" rx="2"/><text x="118.0" y="162.3" text-anchor="middle" font-size="10" fill="#222222" font-weight="700">£6.5k</text><text x="118.0" y="228.0" text-anchor="middle" font-size="10" fill="#6E6E6E">Apr</text><rect x="150.7" y="153.7" width="49.3" height="60.3" fill="#BCBCBC" rx="2"/><text x="175.3" y="148.7" text-anchor="middle" font-size="10" fill="#222222" font-weight="700">£8.4k</text><text x="175.3" y="228.0" text-anchor="middle" font-size="10" fill="#6E6E6E">May</text><rect x="208.0" y="151.4" width="49.3" height="62.6" fill="#BCBCBC" rx="2"/><text x="232.7" y="146.4" text-anchor="middle" font-size="10" fill="#222222" font-weight="700">£8.7k</text><text x="232.7" y="228.0" text-anchor="middle" font-size="10" fill="#6E6E6E">Jun</text><rect x="265.3" y="149.8" width="49.3" height="64.2" fill="#BCBCBC" rx="2"/><text x="290.0" y="144.8" text-anchor="middle" font-size="10" fill="#222222" font-weight="700">£8.9k</text><text x="290.0" y="228.0" text-anchor="middle" font-size="10" fill="#6E6E6E">Jul</text><rect x="322.7" y="156.3" width="49.3" height="57.7" fill="#BCBCBC" rx="2"/><text x="347.3" y="151.3" text-anchor="middle" font-size="10" fill="#222222" font-weight="700">£8.0k</text><text x="347.3" y="228.0" text-anchor="middle" font-size="10" fill="#6E6E6E">Aug</text><rect x="380.0" y="162.3" width="49.3" height="51.7" fill="#BCBCBC" rx="2"/><text x="404.7" y="157.3" text-anchor="middle" font-size="10" fill="#222222" font-weight="700">£7.2k</text><text x="404.7" y="228.0" text-anchor="middle" font-size="10" fill="#6E6E6E">Sep</text><rect x="437.3" y="139.2" width="49.3" height="74.8" fill="#F39A24" rx="2"/><text x="462.0" y="134.2" text-anchor="middle" font-size="10" fill="#222222" font-weight="700">£10.4k</text><text x="462.0" y="228.0" text-anchor="middle" font-size="10" fill="#6E6E6E">Oct</text><rect x="494.7" y="146.7" width="49.3" height="67.3" fill="#F39A24" rx="2"/><text x="519.3" y="141.7" text-anchor="middle" font-size="10" fill="#222222" font-weight="700">£9.4k</text><text x="519.3" y="228.0" text-anchor="middle" font-size="10" fill="#6E6E6E">Nov</text><rect x="552.0" y="124.3" width="49.3" height="89.7" fill="#2F8FE8" rx="2"/><text x="576.7" y="119.3" text-anchor="middle" font-size="10" fill="#222222" font-weight="700">£12.5k</text><text x="576.7" y="228.0" text-anchor="middle" font-size="10" fill="#6E6E6E">Dec</text><rect x="609.3" y="116.9" width="49.3" height="97.1" fill="#2F8FE8" rx="2"/><text x="634.0" y="111.9" text-anchor="middle" font-size="10" fill="#222222" font-weight="700">£13.5k</text><text x="634.0" y="228.0" text-anchor="middle" font-size="10" fill="#6E6E6E">Jan</text><rect x="666.7" y="80.1" width="49.3" height="133.9" fill="#2F8FE8" rx="2"/><text x="691.3" y="75.1" text-anchor="middle" font-size="10" fill="#222222" font-weight="700">£18.7k</text><text x="691.3" y="228.0" text-anchor="middle" font-size="10" fill="#6E6E6E">Feb</text></svg>
+      <div class="take"><b>Christmas, not Easter, is the peak.</b> Dec–Feb delivers the lion's share; plan the headline campaign 6–8 weeks before December.</div>
+    </div>
+
+    <div class="tile span-4">
+      <h2>7 · 12-month MALC forecast</h2>
+      <svg viewBox="0 0 380 290" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;"><polygon points="183.5,153.8 196.5,148.0 209.6,141.9 222.6,135.4 235.7,128.6 248.7,121.3 261.7,113.5 274.8,105.4 287.8,96.7 300.9,87.5 313.9,77.7 327.0,67.4 327.0,134.9 313.9,137.2 300.9,139.4 287.8,141.5 274.8,143.7 261.7,145.8 248.7,147.8 235.7,149.8 222.6,151.8 209.6,153.7 196.5,155.6 183.5,157.4" fill="#A8D0EA" opacity="0.7"/><polyline fill="none" stroke="#4E79A7" stroke-width="1.8" points="40.0,214.1 53.0,219.2 66.1,208.4 79.1,211.8 92.2,205.7 105.2,214.8 118.3,215.6 131.3,203.1 144.3,203.4 157.4,191.5 170.4,188.2 183.5,159.2"/><polyline fill="none" stroke="#2F8FE8" stroke-width="2.4" points="183.5,155.6 196.5,151.8 209.6,147.9 222.6,143.8 235.7,139.6 248.7,135.2 261.7,130.6 274.8,125.8 287.8,120.8 300.9,115.7 313.9,110.3 327.0,104.7"/><circle cx="340.0" cy="104.7" r="5" fill="#2F8FE8"/><text x="336.0" y="96.7" text-anchor="end" font-size="12" font-weight="700" fill="#2F8FE8">688</text><text x="40.0" y="268" font-size="10" fill="#6E6E6E">Mar 25</text><text x="183.5" y="268" text-anchor="middle" font-size="10" fill="#222222" font-weight="600">Today</text><text x="340.0" y="268" text-anchor="end" font-size="10" fill="#6E6E6E">+12 mo</text></svg>
+      <div class="take"><b>Base: 430 → 688 MALC.</b> Blue band shows the Low–High range under ±2pp growth assumptions.</div>
+    </div>
+
+    <div class="tile span-4">
+      <h2>8 · Device split (orders)</h2>
+      <svg viewBox="0 0 360 245" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">
+  <rect x="0" y="0" width="360" height="245" fill="#FFFFFF"/>
+  <circle cx="105" cy="102" r="64" fill="none" stroke="#ECECEC" stroke-width="1"/>
+  <path d="M 105.0 40.0 A 62 62 0 1 1 47.4 124.8 L 69.7 116.0 A 38 38 0 1 0 105.0 64.0 Z" fill="#2F8FE8"/><path d="M 47.4 124.8 A 62 62 0 0 1 105.0 40.0 L 105.0 64.0 A 38 38 0 0 0 69.7 116.0 Z" fill="#F39A24"/>
+  <circle cx="105" cy="102" r="36" fill="#FFFFFF"/>
+  <text x="105" y="96" text-anchor="middle" font-size="24" font-weight="800" fill="#2F8FE8">69%</text>
+  <text x="105" y="116" text-anchor="middle" font-size="11" fill="#6E6E6E">Mobile</text>
+  <line x1="178" y1="35" x2="178" y2="176" stroke="#D9D9D9" stroke-width="1"/>
+  <text x="197" y="28" font-size="10" fill="#555555" font-weight="800" letter-spacing="0.7">LEGEND</text>
+  <rect x="197" y="41" width="11" height="11" fill="#2F8FE8"/><text x="214" y="50" font-size="10.5" fill="#222222" font-weight="700">Mobile</text><text x="214" y="64" font-size="10" fill="#6E6E6E">69%</text><rect x="197" y="73" width="11" height="11" fill="#F39A24"/><text x="214" y="82" font-size="10.5" fill="#222222" font-weight="700">Desktop</text><text x="214" y="96" font-size="10" fill="#6E6E6E">31%</text>
+</svg>
+      <div class="take"><b>Mobile carries 69%.</b> MVP must be mobile-first; checkout must surface Apple Pay / Google Pay above the fold.</div>
+    </div>
+
+    <div class="tile span-4">
+      <h2>9 · Revenue by channel</h2>
+      <svg viewBox="0 0 360 245" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">
+  <rect x="0" y="0" width="360" height="245" fill="#FFFFFF"/>
+  <circle cx="105" cy="102" r="64" fill="none" stroke="#ECECEC" stroke-width="1"/>
+  <path d="M 105.0 40.0 A 62 62 0 0 1 150.2 144.4 L 132.7 128.0 A 38 38 0 0 0 105.0 64.0 Z" fill="#8CCF7E"/><path d="M 150.2 144.4 A 62 62 0 0 1 62.6 147.2 L 79.0 129.7 A 38 38 0 0 0 132.7 128.0 Z" fill="#2F8FE8"/><path d="M 62.6 147.2 A 62 62 0 0 1 47.4 79.2 L 69.7 88.0 A 38 38 0 0 0 79.0 129.7 Z" fill="#F39A24"/><path d="M 47.4 79.2 A 62 62 0 0 1 105.0 40.0 L 105.0 64.0 A 38 38 0 0 0 69.7 88.0 Z" fill="#F7BDD3"/>
+  <circle cx="105" cy="102" r="36" fill="#FFFFFF"/>
+  <text x="105" y="96" text-anchor="middle" font-size="24" font-weight="800" fill="#8CCF7E">37%</text>
+  <text x="105" y="116" text-anchor="middle" font-size="11" fill="#6E6E6E">Organic</text>
+  <line x1="178" y1="35" x2="178" y2="176" stroke="#D9D9D9" stroke-width="1"/>
+  <text x="197" y="28" font-size="10" fill="#555555" font-weight="800" letter-spacing="0.7">LEGEND</text>
+  <rect x="197" y="41" width="11" height="11" fill="#8CCF7E"/><text x="214" y="50" font-size="10.5" fill="#222222" font-weight="700">Organic</text><text x="214" y="64" font-size="10" fill="#6E6E6E">37%</text><rect x="197" y="73" width="11" height="11" fill="#2F8FE8"/><text x="214" y="82" font-size="10.5" fill="#222222" font-weight="700">Paid Search</text><text x="214" y="96" font-size="10" fill="#6E6E6E">25%</text><rect x="197" y="105" width="11" height="11" fill="#F39A24"/><text x="214" y="114" font-size="10.5" fill="#222222" font-weight="700">Paid Social</text><text x="214" y="128" font-size="10" fill="#6E6E6E">19%</text><rect x="197" y="137" width="11" height="11" fill="#F7BDD3"/><text x="214" y="146" font-size="10.5" fill="#222222" font-weight="700">Direct</text><text x="214" y="160" font-size="10" fill="#6E6E6E">19%</text>
+</svg>
+      <div class="take"><b>Organic leads (37%).</b> SEO and email build durable, low-CAC growth — invest first.</div>
+    </div>
+
+    <div class="tile span-4">
+      <h2>10 · Product category mix</h2>
+      <svg viewBox="0 0 360 245" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">
+  <rect x="0" y="0" width="360" height="245" fill="#FFFFFF"/>
+  <circle cx="105" cy="102" r="64" fill="none" stroke="#ECECEC" stroke-width="1"/>
+  <path d="M 105.0 40.0 A 62 62 0 0 1 127.8 159.6 L 119.0 137.3 A 38 38 0 0 0 105.0 64.0 Z" fill="#2F8FE8"/><path d="M 127.8 159.6 A 62 62 0 0 1 54.8 138.4 L 74.3 124.3 A 38 38 0 0 0 119.0 137.3 Z" fill="#8CCF7E"/><path d="M 54.8 138.4 A 62 62 0 0 1 50.7 72.1 L 71.7 83.7 A 38 38 0 0 0 74.3 124.3 Z" fill="#F39A24"/><path d="M 50.7 72.1 A 62 62 0 0 1 105.0 40.0 L 105.0 64.0 A 38 38 0 0 0 71.7 83.7 Z" fill="#F7BDD3"/>
+  <circle cx="105" cy="102" r="36" fill="#FFFFFF"/>
+  <text x="105" y="96" text-anchor="middle" font-size="24" font-weight="800" fill="#2F8FE8">44%</text>
+  <text x="105" y="116" text-anchor="middle" font-size="11" fill="#6E6E6E">Sourdough</text>
+  <line x1="178" y1="35" x2="178" y2="176" stroke="#D9D9D9" stroke-width="1"/>
+  <text x="197" y="28" font-size="10" fill="#555555" font-weight="800" letter-spacing="0.7">LEGEND</text>
+  <rect x="197" y="41" width="11" height="11" fill="#2F8FE8"/><text x="214" y="50" font-size="10.5" fill="#222222" font-weight="700">Sourdough Loaf</text><text x="214" y="64" font-size="10" fill="#6E6E6E">44%</text><rect x="197" y="73" width="11" height="11" fill="#8CCF7E"/><text x="214" y="82" font-size="10.5" fill="#222222" font-weight="700">Celebration Cake</text><text x="214" y="96" font-size="10" fill="#6E6E6E">21%</text><rect x="197" y="105" width="11" height="11" fill="#F39A24"/><text x="214" y="114" font-size="10.5" fill="#222222" font-weight="700">Bread Box</text><text x="214" y="128" font-size="10" fill="#6E6E6E">18%</text><rect x="197" y="137" width="11" height="11" fill="#F7BDD3"/><text x="214" y="146" font-size="10.5" fill="#222222" font-weight="700">Pastry</text><text x="214" y="160" font-size="10" fill="#6E6E6E">17%</text>
+</svg>
+      <div class="take"><b>Sourdough leads (44%).</b> The PDP hero and the Bread Box subscription anchor.</div>
+    </div>
+
+    <div class="tile span-12">
+      <h2>11 · Paid channel detail</h2>
+      <table>
+        <thead>
+          <tr><th>Channel</th><th>Spend</th><th>Clicks</th><th>CTR</th><th>CPC</th>
+              <th>Conv.</th><th>ROAS</th><th>CAC</th></tr>
+        </thead>
+        <tbody>
+      <tr>
+        <td><b>Google</b></td>
+        <td>£34,204</td>
+        <td>75,830</td>
+        <td>4.04%</td>
+        <td>£0.45</td>
+        <td>929</td>
+        <td><span class="pill" style="background:#EDF8EA;color:#15966B;">1.14x</span></td>
+        <td>£36.82</td>
+      </tr>
+      <tr>
+        <td><b>TikTok</b></td>
+        <td>£12,577</td>
+        <td>24,561</td>
+        <td>1.81%</td>
+        <td>£0.51</td>
+        <td>289</td>
+        <td><span class="pill" style="background:#FFF0F0;color:#D94F5A;">0.90x</span></td>
+        <td>£43.52</td>
+      </tr>
+      <tr>
+        <td><b>Meta</b></td>
+        <td>£42,467</td>
+        <td>75,243</td>
+        <td>1.62%</td>
+        <td>£0.56</td>
+        <td>931</td>
+        <td><span class="pill" style="background:#FFF0F0;color:#D94F5A;">0.82x</span></td>
+        <td>£45.61</td>
+      </tr>
+      <tr>
+        <td><b>Other</b></td>
+        <td>£6,105</td>
+        <td>10,601</td>
+        <td>1.07%</td>
+        <td>£0.58</td>
+        <td>117</td>
+        <td><span class="pill" style="background:#FFF0F0;color:#D94F5A;">0.62x</span></td>
+        <td>£52.18</td>
+      </tr></tbody>
+      </table>
+      <div class="take"><b>Quarterly reallocation rule.</b> Top-1 ROAS x 1.30; Top-2 x 1.05; Top-3 x 0.85; bottom x 0.55. Coral pills flag channels that fail the 1.0x test.</div>
+    </div>
+
+  </div>
+
+  <footer>Source: TAB issued workbook (Mar 2024 – Feb 2026) · Generated 12 May 2026 · 100% offline — no external scripts.</footer>
+</div>
+</body>
+</html>

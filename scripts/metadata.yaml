@@ -1,0 +1,29 @@
+---
+title: "From Oven to Online: A Data-Led, AI-Augmented Go-to-Market Plan for Tyne Artisan Bakery"
+subtitle: "Anchored on Monthly Active Local Customers (MALC) as the North Star metric"
+author: "Student Number: [insert]"
+date: "May 2026"
+fontsize: 11pt
+geometry: margin=1in
+mainfont: "DejaVu Serif"
+sansfont: "DejaVu Sans"
+monofont: "DejaVu Sans Mono"
+colorlinks: true
+linkcolor: "Maroon"
+toc: false
+numbersections: true
+header-includes: |
+  \usepackage{fancyhdr}
+  \pagestyle{fancy}
+  \fancyhf{}
+  \fancyhead[L]{\small ISO8005 -- Web \& Social Media Analytics}
+  \fancyhead[R]{\small TAB -- From Oven to Online}
+  \fancyfoot[C]{\thepage}
+  \usepackage{float}
+  \floatplacement{figure}{H}
+  \usepackage{booktabs}
+  \usepackage{caption}
+  \captionsetup{font=small,labelfont=bf}
+  \usepackage{longtable}
+  \setlength{\headheight}{14pt}
+---
